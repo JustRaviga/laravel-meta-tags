@@ -52,21 +52,14 @@ class Meta implements MetaInterface
     protected $route;
 
     /**
-     * @var MetaTagGenerator
-     */
-    protected $generator;
-
-    /**
      * @param Manager $packageManager
-     * @param MetaTagGenerator $generator
      * @param Router $router
      * @param Repository|null $config
      */
-    public function __construct(Manager $packageManager, MetaTagGenerator $generator, Router $router, Repository $config = null)
+    public function __construct(Manager $packageManager, Router $router, Repository $config = null)
     {
         $this->config = $config;
         $this->packageManager = $packageManager;
-        $this->generator = $generator;
         $this->router = $router;
 
         $this->initPlacements();
@@ -192,24 +185,6 @@ class Meta implements MetaInterface
     }
 
     /**
-     * @param string|null $name The page name.
-     * @return bool
-     * @throws Throwable
-     */
-    public function exist(string $name = null): bool
-    {
-        if (is_null($name)) {
-            try {
-                [$name] = $this->getCurrentRoute();
-            } catch (UnnamedRouteException $e) {
-                return false;
-            }
-        }
-
-        return isset($this->callbacks[$name]);
-    }
-
-    /**
      * Return current route: two-element array consisting of the route name (string) and any parameters (array).
      * @return array
      * @throws Throwable
@@ -245,7 +220,7 @@ class Meta implements MetaInterface
      */
     public function generate(string $name = null, ...$params)
     {
-        if ($name === null) {
+        if (empty($name)) {
             try {
                 [$name, $params] = $this->getCurrentRoute();
             } catch (UnnamedRouteException $e) {
@@ -256,11 +231,25 @@ class Meta implements MetaInterface
         }
 
         try {
-            $this->generator->generate($this->callbacks, $name, $params);
+            $this->call($name, $params);
         } catch (InvalidMetaTagException $exception) {
             if ($this->config('meta_tags.invalid-named-meta-exception')){
                 throw $exception;
             }
         }
     }
+
+    /**
+     * Call the closure to generate meta tag for a page.
+     * @param string $name
+     * @param array $params
+     * @throws Throwable
+     */
+    protected function call(string $name, array $params)
+    {
+        throw_if(!isset($this->callbacks[$name]), new InvalidMetaTagException($name));
+
+        $this->callbacks[$name]($this, ...$params);
+    }
+
 }

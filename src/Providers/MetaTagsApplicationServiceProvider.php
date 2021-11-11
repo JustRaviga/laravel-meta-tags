@@ -5,7 +5,6 @@ namespace Butschster\Head\Providers;
 use Butschster\Head\Contracts\MetaTags\MetaInterface;
 use Butschster\Head\Contracts\Packages\ManagerInterface;
 use Butschster\Head\MetaTags\Meta;
-use Butschster\Head\MetaTags\MetaTagGenerator;
 use Butschster\Head\Packages\Manager;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Arr;
@@ -27,7 +26,7 @@ class MetaTagsApplicationServiceProvider extends ServiceProvider
         $files = config('meta_tags.files');
 
         foreach (Arr::wrap($files) as $file) {
-            if (file_exists($file)){
+            if (file_exists($file)) {
                 require_once $file;
             }
         }
@@ -48,12 +47,9 @@ class MetaTagsApplicationServiceProvider extends ServiceProvider
 
     protected function registerMeta(): void
     {
-        $this->app->bind(MetaTagGenerator::class, '\Butschster\Head\MetaTags\MetaTagGenerator::class');
-
         $this->app->singleton(MetaInterface::class, function () {
             $meta = new Meta(
                 $this->app[ManagerInterface::class],
-                $this->app[MetaTagGenerator::class],
                 $this->app[Router::class],
                 $this->app['config']
             );
