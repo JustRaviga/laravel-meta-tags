@@ -50,4 +50,6 @@ return [
 
     'invalid-named-meta-exception' => true,
 
+    'route_has_language_prefix' => true,
+
 ];

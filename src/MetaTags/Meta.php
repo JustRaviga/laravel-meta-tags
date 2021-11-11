@@ -11,6 +11,7 @@ use Butschster\Head\Packages\Manager;
 use Illuminate\Config\Repository;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Illuminate\Support\Traits\Macroable;
 use Throwable;
 
@@ -210,6 +211,10 @@ class Meta implements MetaInterface
         }
 
         $name = $route->getName();
+
+        if ($this->config('meta_tags.route_has_language_prefix')) {
+            $name = Str::replace(app()->getLocale() . ".", '', $name);
+        }
 
         throw_if(is_null($name), new UnnamedRouteException($route));
 
