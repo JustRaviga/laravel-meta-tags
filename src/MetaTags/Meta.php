@@ -127,10 +127,17 @@ class Meta implements MetaInterface
 
     /**
      * Get content as a string of HTML.
+     * @param string|null $name
+     * @param mixed ...$params
      * @return string
+     * @throws InvalidMetaTagException
+     * @throws Throwable
+     * @throws UnnamedRouteException
      */
-    public function toHtml()
+    public function toHtml(string $name = null, ...$params): string
     {
+        $this->generate($name, ...$params);
+
         return $this->head()->toHtml();
     }
 
@@ -175,6 +182,7 @@ class Meta implements MetaInterface
     }
 
     /**
+     * Register meta details by route name
      * @throws Throwable
      */
     public function for(string $name, callable $callback)
@@ -233,7 +241,7 @@ class Meta implements MetaInterface
         try {
             $this->call($name, $params);
         } catch (InvalidMetaTagException $exception) {
-            if ($this->config('meta_tags.invalid-named-meta-exception')){
+            if ($this->config('meta_tags.invalid-named-meta-exception')) {
                 throw $exception;
             }
         }
