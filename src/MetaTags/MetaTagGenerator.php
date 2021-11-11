@@ -23,17 +23,14 @@ class MetaTagGenerator
      * @param array $callbacks
      * @param string $name
      * @param array $params
-     * @return Collection
      * @throws Throwable
      */
-    public function generate(array $callbacks, string $name, array $params): Collection
+    public function generate(array $callbacks, string $name, array $params)
     {
         $this->metas = collect();
         $this->callbacks = $callbacks;
 
         $this->call($name, $params);
-
-        return $this->metas;
     }
 
     /**
@@ -54,7 +51,8 @@ class MetaTagGenerator
      */
     public function addTitle(string $title): MetaTagGenerator
     {
-        $this->metas->put('title', $title);
+//        $this->metas->put('title', $title);
+        Meta::setTitle($title);
         return $this;
     }
 
@@ -64,7 +62,8 @@ class MetaTagGenerator
      */
     public function addDescription(string $description): MetaTagGenerator
     {
-        $this->metas->put('description', $description);
+//        $this->metas->put('description', $description);
+        Meta::setDescription($description);
         return $this;
     }
 
@@ -73,6 +72,6 @@ class MetaTagGenerator
      */
     public function addKeyWords(array $keyWords): void
     {
-        $this->metas->put('key_words',  $keyWords);
+        Meta::setKeywords($keyWords);
     }
 }

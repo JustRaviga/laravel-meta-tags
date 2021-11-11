@@ -22,8 +22,18 @@ class MetaTagsServiceProvider extends ServiceProvider
         $this->app->singleton(MetaInterface::class, function () {
             $meta = new Meta(
                 $this->app[ManagerInterface::class],
+                $this->app[MetaTagGenerator::class],
+                $this->app[Router::class],
                 $this->app['config']
             );
+
+            $files = config('meta_tags.files');
+
+            foreach (Arr::wrap($files) as $file) {
+                if (file_exists($file)) {
+                    require_once $file;
+                }
+            }
 
             // It just an imagination, you can automatically
             // add favicon if it exists

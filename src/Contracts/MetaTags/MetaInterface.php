@@ -436,4 +436,11 @@ interface MetaInterface extends Htmlable, PlacementsInterface, Arrayable
      * @return PackageInterface|null
      */
     public function getPackage(string $name): ?PackageInterface;
+
+    /**
+     * Register meta tags by route name
+     * @param string $name
+     * @param callable $callback
+     */
+    public function for(string $name, callable $callback);
 }

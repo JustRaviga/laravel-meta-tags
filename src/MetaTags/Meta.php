@@ -239,12 +239,11 @@ class Meta implements MetaInterface
      * Generate a set of meta tags for a page.
      * @param string|null $name
      * @param mixed ...$params
-     * @return Collection
      * @throws InvalidMetaTagException
      * @throws Throwable
      * @throws UnnamedRouteException
      */
-    public function generate(string $name = null, ...$params): Collection
+    public function generate(string $name = null, ...$params)
     {
         if ($name === null) {
             try {
@@ -259,13 +258,11 @@ class Meta implements MetaInterface
         }
 
         try {
-            return $this->generator->generate($this->callbacks, $name, $params);
+            $this->generator->generate($this->callbacks, $name, $params);
         } catch (InvalidMetaTagException $exception) {
             if ($this->config('meta_tags.invalid-named-meta-exception')){
                 throw $exception;
             }
         }
-
-        return new Collection();
     }
 }

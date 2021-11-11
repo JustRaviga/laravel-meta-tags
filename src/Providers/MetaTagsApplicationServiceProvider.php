@@ -53,7 +53,9 @@ class MetaTagsApplicationServiceProvider extends ServiceProvider
             $files = config('meta_tags.files');
 
             foreach (Arr::wrap($files) as $file) {
-                require $file;
+                if (file_exists($file)){
+                    require_once $file;
+                }
             }
 
             return $meta->initialize();
