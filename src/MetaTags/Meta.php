@@ -212,7 +212,7 @@ class Meta implements MetaInterface
 
         $name = $route->getName();
 
-        if ($this->config('meta_tags.route_has_language_prefix')) {
+        if (config('meta_tags.route_has_language_prefix')) {
             $name = Str::replace(app()->getLocale() . ".", '', $name);
         }
 
