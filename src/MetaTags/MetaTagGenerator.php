@@ -3,16 +3,10 @@
 namespace Butschster\Head\MetaTags;
 
 use Butschster\Head\MetaTags\Exceptions\InvalidMetaTagException;
-use Illuminate\Support\Collection;
 use Throwable;
 
 class MetaTagGenerator
 {
-    /**
-     * @var Collection
-     */
-    protected $metas;
-
     /**
      * @var array The registered meta tags callbacks
      */
@@ -27,7 +21,6 @@ class MetaTagGenerator
      */
     public function generate(array $callbacks, string $name, array $params)
     {
-        $this->metas = collect();
         $this->callbacks = $callbacks;
 
         $this->call($name, $params);
@@ -51,7 +44,6 @@ class MetaTagGenerator
      */
     public function addTitle(string $title): MetaTagGenerator
     {
-//        $this->metas->put('title', $title);
         Meta::setTitle($title);
         return $this;
     }
@@ -62,7 +54,6 @@ class MetaTagGenerator
      */
     public function addDescription(string $description): MetaTagGenerator
     {
-//        $this->metas->put('description', $description);
         Meta::setDescription($description);
         return $this;
     }

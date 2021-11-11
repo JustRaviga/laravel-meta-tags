@@ -252,8 +252,6 @@ class Meta implements MetaInterface
                 if (config('breadcrumbs.unnamed-route-exception')) {
                     throw $e;
                 }
-
-                return new Collection;
             }
         }
 

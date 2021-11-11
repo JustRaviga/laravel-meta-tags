@@ -23,6 +23,14 @@ class MetaTagsApplicationServiceProvider extends ServiceProvider
         if ($this->app->bound('blade.compiler')) {
             $this->registerBladeDirectives();
         }
+
+        $files = config('meta_tags.files');
+
+        foreach (Arr::wrap($files) as $file) {
+            if (file_exists($file)){
+                require_once $file;
+            }
+        }
     }
 
     public function register()
@@ -49,14 +57,6 @@ class MetaTagsApplicationServiceProvider extends ServiceProvider
                 $this->app[Router::class],
                 $this->app['config']
             );
-
-            $files = config('meta_tags.files');
-
-            foreach (Arr::wrap($files) as $file) {
-                if (file_exists($file)){
-                    require_once $file;
-                }
-            }
 
             return $meta->initialize();
         });
