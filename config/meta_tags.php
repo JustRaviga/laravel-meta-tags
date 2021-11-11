@@ -43,4 +43,11 @@ return [
     'robots' => null,
     'viewport' => Viewport::RESPONSIVE,
     'csrf_token' => true,
+
+    'files' => base_path('routes/meta-routes.php'),
+
+    'unnamed-route-exception' => true,
+
+    'invalid-named-meta-exception' => true,
+
 ];

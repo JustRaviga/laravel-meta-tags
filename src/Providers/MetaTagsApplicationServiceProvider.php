@@ -5,7 +5,10 @@ namespace Butschster\Head\Providers;
 use Butschster\Head\Contracts\MetaTags\MetaInterface;
 use Butschster\Head\Contracts\Packages\ManagerInterface;
 use Butschster\Head\MetaTags\Meta;
+use Butschster\Head\MetaTags\MetaTagGenerator;
 use Butschster\Head\Packages\Manager;
+use Illuminate\Routing\Router;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 
@@ -37,11 +40,21 @@ class MetaTagsApplicationServiceProvider extends ServiceProvider
 
     protected function registerMeta(): void
     {
+        $this->app->bind(MetaTagGenerator::class, '\Butschster\Head\MetaTags\MetaTagGenerator::class');
+
         $this->app->singleton(MetaInterface::class, function () {
             $meta = new Meta(
                 $this->app[ManagerInterface::class],
+                $this->app[MetaTagGenerator::class],
+                $this->app[Router::class],
                 $this->app['config']
             );
+
+            $files = config('meta_tags.files');
+
+            foreach (Arr::wrap($files) as $file) {
+                require $file;
+            }
 
             return $meta->initialize();
         });
@@ -56,7 +69,7 @@ class MetaTagsApplicationServiceProvider extends ServiceProvider
 
     protected function registerBladeDirectives()
     {
-        Blade::directive('meta_tags', function($expression) {
+        Blade::directive('meta_tags', function ($expression) {
             if (empty($expression)) {
                 return "<?php echo \Butschster\Head\Facades\Meta::toHtml(); ?>";
             }

@@ -4,9 +4,15 @@ namespace Butschster\Head\MetaTags;
 
 use Butschster\Head\Contracts\MetaTags\Entities\TagInterface;
 use Butschster\Head\Contracts\MetaTags\MetaInterface;
+use Butschster\Head\MetaTags\Exceptions\DuplicateMetaRouteException;
+use Butschster\Head\MetaTags\Exceptions\InvalidMetaTagException;
+use Butschster\Head\MetaTags\Exceptions\UnnamedRouteException;
 use Butschster\Head\Packages\Manager;
-use Illuminate\Contracts\Config\Repository;
+use Illuminate\Config\Repository;
+use Illuminate\Routing\Router;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Traits\Macroable;
+use Throwable;
 
 class Meta implements MetaInterface
 {
@@ -19,7 +25,7 @@ class Meta implements MetaInterface
         Concerns\ManageAssets,
         Concerns\InitializeDefaults;
 
-    const PLACEMENT_HEAD   = 'head';
+    const PLACEMENT_HEAD = 'head';
     const PLACEMENT_FOOTER = 'footer';
 
     /**
@@ -32,14 +38,36 @@ class Meta implements MetaInterface
      */
     private $config;
 
+    protected $callbacks = [];
+
+    /**
+     * @var array|null The current route name and parameters.
+     * @var Router
+     */
+    protected $router;
+
+    /**
+     * @var array|null The current route name and parameters.
+     */
+    protected $route;
+
+    /**
+     * @var MetaTagGenerator
+     */
+    protected $generator;
+
     /**
      * @param Manager $packageManager
+     * @param MetaTagGenerator $generator
+     * @param Router $router
      * @param Repository|null $config
      */
-    public function __construct(Manager $packageManager, Repository $config = null)
+    public function __construct(Manager $packageManager, MetaTagGenerator $generator, Router $router, Repository $config = null)
     {
         $this->config = $config;
         $this->packageManager = $packageManager;
+        $this->generator = $generator;
+        $this->router = $router;
 
         $this->initPlacements();
     }
@@ -145,11 +173,99 @@ class Meta implements MetaInterface
             return $default;
         }
 
-        return $this->config->get('meta_tags.'.$key, $default);
+        return $this->config->get('meta_tags.' . $key, $default);
     }
 
     public function toArray()
     {
         return $this->placements->toArray();
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function for(string $name, callable $callback)
+    {
+        throw_if(isset($this->callbacks[$name]), new DuplicateMetaRouteException($name));
+
+        $this->callbacks[$name] = $callback;
+    }
+
+    /**
+     * @param string|null $name The page name.
+     * @return bool
+     * @throws Throwable
+     */
+    public function exist(string $name = null): bool
+    {
+        if (is_null($name)) {
+            try {
+                [$name] = $this->getCurrentRoute();
+            } catch (UnnamedRouteException $e) {
+                return false;
+            }
+        }
+
+        return isset($this->callbacks[$name]);
+    }
+
+    /**
+     * Return current route: two-element array consisting of the route name (string) and any parameters (array).
+     * @return array
+     * @throws Throwable
+     */
+    protected function getCurrentRoute(): ?array
+    {
+        if ($this->route) {
+            return $this->route;
+        }
+
+        $route = $this->router->current();
+
+        if ($route === null) {
+            return ['errors.404', []];
+        }
+
+        $name = $route->getName();
+
+        throw_if(is_null($name), new UnnamedRouteException($route));
+
+        $params = array_values($route->parameters());
+
+        return [$name, $params];
+    }
+
+    /**
+     * Generate a set of meta tags for a page.
+     * @param string|null $name
+     * @param mixed ...$params
+     * @return Collection
+     * @throws InvalidMetaTagException
+     * @throws Throwable
+     * @throws UnnamedRouteException
+     */
+    public function generate(string $name = null, ...$params): Collection
+    {
+        if ($name === null) {
+            try {
+                [$name, $params] = $this->getCurrentRoute();
+            } catch (UnnamedRouteException $e) {
+                if (config('breadcrumbs.unnamed-route-exception')) {
+                    throw $e;
+                }
+
+                return new Collection;
+            }
+        }
+
+        try {
+            return $this->generator->generate($this->callbacks, $name, $params);
+        } catch (InvalidMetaTagException $exception) {
+            if ($this->config('meta_tags.invalid-named-meta-exception')){
+                throw $exception;
+            }
+        }
+
+        return new Collection();
     }
 }
